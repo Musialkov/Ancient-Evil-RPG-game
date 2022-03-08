@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace RPG.SceneManagement
@@ -7,6 +6,7 @@ namespace RPG.SceneManagement
     public class Fader : MonoBehaviour
     {
         CanvasGroup canvasGroup;
+        Coroutine currentActiveCoroutine = null;
 
         void Awake()
         {
@@ -20,13 +20,32 @@ namespace RPG.SceneManagement
 
         public IEnumerator FadeOut(float time)
         {
-            while(canvasGroup.alpha < 1)
+           if(currentActiveCoroutine != null)
+           {
+               StopCoroutine(currentActiveCoroutine);
+           }
+           currentActiveCoroutine = StartCoroutine(FadeOutRoutine(time));
+           yield return currentActiveCoroutine;
+        }
+
+        private IEnumerator FadeOutRoutine(float time)
+        {
+            while (canvasGroup.alpha < 1)
             {
-                canvasGroup.alpha += Time.deltaTime/time;
+                canvasGroup.alpha += Time.deltaTime / time;
                 yield return null;
             }
         }
         public IEnumerator FadeIn(float time)
+        {
+            if (currentActiveCoroutine != null)
+            {
+                StopCoroutine(currentActiveCoroutine);
+            }
+            currentActiveCoroutine = StartCoroutine(FadeInRoutine(time));
+            yield return currentActiveCoroutine;
+        }
+        private IEnumerator FadeInRoutine(float time)
         {
             while (canvasGroup.alpha > 0)
             {

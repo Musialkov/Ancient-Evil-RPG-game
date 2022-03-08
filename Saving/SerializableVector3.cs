@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace RPG.Saving
+namespace Musialkov.Saving
 {
     [System.Serializable]
     public class SerializableVector3
@@ -17,6 +17,11 @@ namespace RPG.Saving
         public Vector3 ToVector()
         {
             return new Vector3(x, y, z);
+        }
+
+        public override string ToString()
+        {
+            return x.ToString() + " " + y.ToString() + " " + z.ToString();
         }
     }
 }

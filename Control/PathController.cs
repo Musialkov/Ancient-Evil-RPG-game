@@ -1,6 +1,3 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace RPG.Control
@@ -29,8 +26,6 @@ namespace RPG.Control
         public Vector3 GetWaypoint(int i)
         {
             return transform.GetChild(i).position;
-        }
-
-       
+        }      
     }
 }

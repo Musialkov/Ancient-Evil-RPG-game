@@ -4,24 +4,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using RPG.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace RPG.Saving
+namespace Musialkov.Saving
 {
     public class SavingSystem : MonoBehaviour
-    {
-        public IEnumerator LoadLastScene(string saveFile)
-        {
-            Dictionary<string, object> state = LoadFile(saveFile);
-            int buildIndex = SceneManager.GetActiveScene().buildIndex;
-            if (state.ContainsKey("lastSceneBuildIndex"))
-            {
-                buildIndex = (int)state["lastSceneBuildIndex"];
-            }
-            yield return SceneManager.LoadSceneAsync(buildIndex);
-            RestoreState(state);
-        }
+    {  
 
         public void Save(string saveFile)
         {
@@ -29,18 +19,17 @@ namespace RPG.Saving
             CaptureState(state);
             SaveFile(saveFile, state);
         }
+        public void Delete(string saveFile)
+        {
+            File.Delete(GetPathFromSaveFile(saveFile));
+        }
 
         public void Load(string saveFile)
         {
             RestoreState(LoadFile(saveFile));
         }
 
-        public void Delete(string saveFile)
-        {
-            File.Delete(GetPathFromSaveFile(saveFile));
-        }
-
-        private Dictionary<string, object> LoadFile(string saveFile)
+        public Dictionary<string, object> LoadFile(string saveFile)
         {
             string path = GetPathFromSaveFile(saveFile);
             if (!File.Exists(path))
@@ -71,11 +60,20 @@ namespace RPG.Saving
             {
                 state[saveable.GetUniqueIdentifier()] = saveable.CaptureState();
             }
+        
+            int buildIndex = (int) Scenes.Tavern;
+            foreach (var scene in SceneManager.GetAllScenes())
+            {
+                if(scene.buildIndex != (int) Scenes.PersistantScene)
+                {
+                    buildIndex = scene.buildIndex;
+                }
+            }
 
-            state["lastSceneBuildIndex"] = SceneManager.GetActiveScene().buildIndex;
+            state["lastSceneBuildIndex"] = buildIndex;
         }
 
-        private void RestoreState(Dictionary<string, object> state)
+        public void RestoreState(Dictionary<string, object> state)
         {
             foreach (SaveableEntity saveable in FindObjectsOfType<SaveableEntity>())
             {

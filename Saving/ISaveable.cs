@@ -1,4 +1,4 @@
-namespace RPG.Saving
+namespace Musialkov.Saving
 {
     public interface ISaveable
     {

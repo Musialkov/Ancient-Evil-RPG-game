@@ -3,6 +3,8 @@ using UnityEngine;
 using RPG.Combat;
 using RPG.Core;
 using RPG.Movement;
+using RPG.Attributes;
+using System;
 
 namespace RPG.Control
 {
@@ -11,7 +13,9 @@ namespace RPG.Control
         [SerializeField] float chaseDistance = 10f;
         [SerializeField] float timeOfBeingSuspicious = 3f;
         [SerializeField] float timeOfBeaingAtWaypoint = 2f;
+        [SerializeField] float timeOfBeaingAttacking = 10f;
         [SerializeField] float waypointTolerance = 1f;
+        [SerializeField] float shoutDistance = 5f;
         [SerializeField] PathController pathController;
         
         GameObject player;
@@ -22,7 +26,7 @@ namespace RPG.Control
 
         //Guard memory
         Vector3 guardPosition;
-       [SerializeField] float timeSinceLastSawPlayer = Mathf.Infinity;
+        float timeSinceLastSawPlayer = Mathf.Infinity;
         float timeOfCurrentBeaingAtWaypoint = Mathf.Infinity;
         int currentWaypointIndex = 0;
 
@@ -32,23 +36,25 @@ namespace RPG.Control
             fighter = GetComponent<Fighter>();
             health = GetComponent<Health>();
             mover = GetComponent<Mover>();
-            actionSheduler = GetComponent<ActionSheduler>();
+            actionSheduler = GetComponent<ActionSheduler>();          
+        }
 
+        private void Start() 
+        {
             guardPosition = transform.position;
         }
 
         void Update()
         {
             if (health.IsDead()) return;
-
-            if (IsPlayerInChaseRange() && fighter.CanAttack(player))
-            {
+            if (fighter.isActiveAndEnabled && ChceckPossibleAttack() && fighter.CanAttack(player))
+            {    
                 timeSinceLastSawPlayer = 0;
                 AttcackBehaviour();
             }
             else if (timeOfBeingSuspicious > timeSinceLastSawPlayer)
             {
-               SuscpicousBehaviour();
+                SuscpicousBehaviour();
             }
             else
             {
@@ -58,20 +64,28 @@ namespace RPG.Control
             IncreaseTimeVariable();
         }
 
-        private void IncreaseTimeVariable()
+        private bool ChceckPossibleAttack()
         {
-            timeSinceLastSawPlayer += Time.deltaTime;
-            timeOfCurrentBeaingAtWaypoint += Time.deltaTime;
-        }
-
-        private bool IsPlayerInChaseRange()
-        {
-            return Vector3.Distance(transform.position, player.transform.position) < chaseDistance;
+            return Vector3.Distance(transform.position, player.transform.position) < chaseDistance ||
+            fighter.getTimeFromLastAttack() < timeOfBeaingAttacking;
         }
 
         private void AttcackBehaviour()
         {
             fighter.Attack(player);
+        }
+
+        public void AlarmNearbyEnemies()
+        {
+            RaycastHit[] hits = Physics.SphereCastAll(transform.position, shoutDistance, Vector3.up, 0);
+            foreach (RaycastHit hit in hits)
+            {
+                AIController ai = hit.collider.GetComponent<AIController>();
+                if (ai != null && ai != gameObject.GetComponent<AIController>())
+                {
+                    ai.GetComponent<Fighter>().resetTimeFromLastAttack();
+                }
+            }
         }
 
         private void SuscpicousBehaviour()
@@ -97,6 +111,12 @@ namespace RPG.Control
             {
                 mover.StartMoveAction(nextPosition);
             }        
+        }
+
+        private void IncreaseTimeVariable()
+        {
+            timeSinceLastSawPlayer += Time.deltaTime;
+            timeOfCurrentBeaingAtWaypoint += Time.deltaTime;
         }
 
         private bool AtWaypoint()

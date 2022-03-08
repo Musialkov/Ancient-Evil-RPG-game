@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
-using RPG.Core;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.AI;
 
-namespace RPG.Saving
+namespace Musialkov.Saving
 {
     [ExecuteAlways]
     public class SaveableEntity : MonoBehaviour
     {
         [SerializeField] string uniqueIdentifier = "";
+
         static Dictionary<string, SaveableEntity> globalLookup = new Dictionary<string, SaveableEntity>();
 
         public string GetUniqueIdentifier()
@@ -40,6 +39,8 @@ namespace RPG.Saving
                 }
             }
         }
+
+        // PRIVATE
 
 #if UNITY_EDITOR
         private void Update() {

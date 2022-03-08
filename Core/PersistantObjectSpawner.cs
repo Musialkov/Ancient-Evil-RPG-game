@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace RPG.Core
 {
@@ -12,6 +10,8 @@ namespace RPG.Core
         static bool isOnScene = false;
 
         private void Awake() {
+
+            //SceneManager.LoadScene(3);    
             
             if(isOnScene) return;
 

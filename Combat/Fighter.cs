@@ -1,40 +1,50 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using RPG.Movement;
 using RPG.Core;
+using Musialkov.Saving;
+using RPG.Attributes;
+using RPG.Stats;
+using System.Collections.Generic;
+using UnityEngine.Events;
+using Musialkov.Inventories;
 
 namespace RPG.Combat
 {
-    public class Fighter : MonoBehaviour, IAction
+    public class Fighter : MonoBehaviour, IAction, ISaveable
     {
-        [SerializeField] float damage = 10f;
-        [SerializeField] float range = 2f;
+        [SerializeField] UnityEvent onHit;
         [SerializeField] float timeBetweenAttacks = 1f;
         [SerializeField] float timeSinceLastAttack = 1f;
-        [SerializeField] GameObject weapon;
-        [SerializeField] Transform handTransform;
+        [SerializeField] Transform rightHandTransform;
+        [SerializeField] Transform leftHandTransform;
+        [SerializeField] WeaponConfig defaultWeaponConfig;
 
-
-        Health target;
+        Health targetHealth = null;
         Mover mover;
         Animator animator;
         ActionSheduler actionSheduler;
+        WeaponConfig currentWeaponConfig = null;
+        Equipment equipment;
+        float timeFromLastAttack = 0;
+        float damageSpread = 0.15f;
+        public Weapon currentWeapon;
 
-        private void Start() 
+        public float getTimeFromLastAttack()   { return timeFromLastAttack; }
+        public void resetTimeFromLastAttack() { timeFromLastAttack = 0; }
+
+        private void Awake() 
         {
             mover = GetComponent<Mover>();
             animator = GetComponent<Animator>();
             actionSheduler = GetComponent<ActionSheduler>();
-            SpawnWeapon();
+            equipment = GetComponent<Equipment>();
+
+            currentWeaponConfig = defaultWeaponConfig;
         }
 
-        private void SpawnWeapon()
-        {
-            if(weapon != null)
-            {
-                Instantiate(weapon, handTransform);
-            }    
+        private void Start() 
+        {        
+            currentWeapon = EquipWeapon(currentWeaponConfig);                 
         }
 
         private void Update()
@@ -42,16 +52,36 @@ namespace RPG.Combat
             GettingToTarget();
         }
 
+        public Weapon EquipWeapon(WeaponConfig weaponConfig)
+        {
+            currentWeaponConfig = weaponConfig;
+            Weapon weapon = weaponConfig.SpawnWeapon(animator, rightHandTransform, leftHandTransform);
+            currentWeapon = weapon;
+            return weapon;
+        }
+
+        private void UpdateWeapon()
+        {
+           
+        }
+
+        public Health GetTargetHealth()
+        {
+            return targetHealth;
+        }
+
         private void GettingToTarget()
         {
             timeSinceLastAttack += Time.deltaTime;
+            timeFromLastAttack += Time.deltaTime;
 
-            if (target == null) return;
-            if (target.IsDead()) return;
+            if (targetHealth == null) return;
+            if (targetHealth.IsDead()) return;
+
        
-            if (Vector3.Distance(transform.position, target.transform.position) > range)   
+            if (Vector3.Distance(transform.position, targetHealth.transform.position) > currentWeaponConfig.Range)   
             {
-                mover.MoveTo(target.transform.position);
+                mover.MoveTo(targetHealth.transform.position);
             }                         
             else
             {
@@ -62,47 +92,102 @@ namespace RPG.Combat
 
         private void AttackBehaviour()
         {
-            transform.LookAt(target.transform.position);
+            transform.LookAt(targetHealth.transform.position);
             if(timeSinceLastAttack > timeBetweenAttacks)
             {
-                //this will trigger Hit() event
+                //this will trigger Hit() event             
                 animator.ResetTrigger("stopAttack");
                 animator.SetTrigger("attack");       
                 timeSinceLastAttack = 0;
+                timeFromLastAttack = 0;
             }            
         }
+        
 
         //Animation event
         private void Hit()
         {
-            if(target != null)
+            if(targetHealth != null)
             {
-                target.TakeDamage(damage);
-                print("jebudu");
-            }        
+                float damage = GetComponent<BaseStats>().GetStat(Stat.Damage);
+                damage = CalculateDamageSpread(damage);
+
+                if(currentWeapon != null)
+                {           
+                    currentWeapon.OnHit();
+                }
+
+                if(currentWeaponConfig.HasProjectile())
+                {
+                    currentWeaponConfig.SpawnProjectile(rightHandTransform, leftHandTransform, targetHealth, gameObject, damage);
+                    Mana mana = GetComponent<Mana>();
+                    if (mana != null && currentWeaponConfig.ManaCost > 0)
+                    {                        
+                        mana.ReduceMana(currentWeaponConfig.ManaCost);
+                        if(mana.ManaValue < currentWeaponConfig.ManaCost)
+                        {
+                            Cancel();
+                            currentWeaponConfig = defaultWeaponConfig;
+                            currentWeapon = EquipWeapon(currentWeaponConfig);
+                        }
+                    }
+                }
+                else
+                {
+                    if(targetHealth.GetHealth() > 0)
+                    {
+                        targetHealth.TakeDamage(gameObject, damage);
+                    }                    
+                }                
+            } 
+
+            onHit.Invoke();       
+        }
+
+        //Animation event
+        private void Shoot()
+        {
+            Hit();
         }
 
         public void Cancel()
         {
-            target = null;
+            targetHealth = null;
             StopAttackAnimation();
         }
 
         public void Attack (GameObject combatTarget)
         {
             actionSheduler.StartAction(this);
-            if(target != combatTarget.GetComponent<Health>() && target != null)
+            if(targetHealth != combatTarget.GetComponent<Health>() && targetHealth != null)
             {
                 StopAttackAnimation();
             }
-            target = combatTarget.GetComponent<Health>();
+            targetHealth = combatTarget.GetComponent<Health>();            
         }
         
         public bool CanAttack(GameObject combatTarget)
         {
             if(combatTarget == null) return false;
+            if(!mover.CanMoveTo(combatTarget.transform.position)) return false;
+
+            Mana mana = GetComponent<Mana>();
+            if(mana != null && currentWeaponConfig.ManaCost > mana.ManaValue) return false;
+            
+
             Health checkedTarget = combatTarget.GetComponent<Health>();
             return checkedTarget != null && !checkedTarget.IsDead();
+        }
+
+        private float CalculateDamageSpread(float damage)
+        {
+            float totalDamage;
+            bool addDamage = Random.Range(0, 1) == 1;
+            int spreadDmg = (int) Random.Range(0, damage * damageSpread);
+            if(addDamage) totalDamage = damage + spreadDmg;
+            else totalDamage = damage - spreadDmg;
+
+            return totalDamage;
         }
 
         private void StopAttackAnimation()
@@ -110,6 +195,22 @@ namespace RPG.Combat
             animator.ResetTrigger("attack");
             animator.SetTrigger("stopAttack");
             timeSinceLastAttack = timeBetweenAttacks;
+        }
+
+        public object CaptureState()
+        {
+            if(currentWeaponConfig != null)
+            {
+                return currentWeaponConfig.name;
+            }
+            return null;
+        }
+
+        public void RestoreState(object state)
+        {
+            string weaponName = (string) state;
+            WeaponConfig weapon = UnityEngine.Resources.Load<WeaponConfig>(weaponName);
+            currentWeapon = EquipWeapon(weapon);
         }
 
     }
