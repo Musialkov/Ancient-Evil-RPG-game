@@ -8,7 +8,7 @@ So far i have learnd a lot about:
 * Inventory systems
 * Dialogue systems
 
-Now I am polishing this game to make memorable experience for all players
+After finishing the course I am implementing new features and I am polishing my game to make memorable experience for all players
 
 # Screenshots
 <img src="https://user-images.githubusercontent.com/69191839/157321593-59be580d-a0cd-4f25-a112-57cbc5ebaf12.png" width="891" height="500">
