@@ -1,7 +1,7 @@
-# RPG-Project
-RPG-Project will be a isometric role-playing game. I want to combine Gothic atmosphere with Diablo gameplay. 
+# Ancient Evil
+Ancient Evil is a isometric role-playing game. I wanted to combine Gothic atmosphere with Diablo gameplay. 
 
-I am creating this project based on the course https://www.udemy.com/course/unityrpg/
+I created this project based on the course https://www.udemy.com/course/unityrpg/
 So far i have learnd a lot about: 
 * Saving system 
 * Connections betweens scenes
