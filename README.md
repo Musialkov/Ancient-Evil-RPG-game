@@ -7,8 +7,9 @@ You can download game from here:
 https://musialkov.itch.io/ancient-evil
 
 ## Features
-**Ancient Evil** includes a lot of mechanics such as:
-* Stroy line which takes about 1 hour to finish
+**Ancient Evil** includes a lot of mechanics and features such as:
+* Story line which takes about 1 hour to finish
+  * Main quest and also side quests
 * Saving system 
 * Fighting system
   * Melee weapons
@@ -17,9 +18,11 @@ https://musialkov.itch.io/ancient-evil
 * Inventory systems
   * Stats of main hero depends on his inventory
 * Dialogue systems
+* Experience and leveling up system
 * Settings
   * Resolution changing
   * Sound setting
+* Cutscenes
 ## Screenshots
 <img src="https://user-images.githubusercontent.com/69191839/185053381-ba7c9469-8d4f-473c-bf6c-29dffecb4847.png" width="891" height="500">
 <img src="https://user-images.githubusercontent.com/69191839/185053394-4932be3f-75d4-4194-841e-f3d6db25c9b7.png" width="891" height="500">
