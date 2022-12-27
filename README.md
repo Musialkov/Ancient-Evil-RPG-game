@@ -15,6 +15,8 @@ https://musialkov.itch.io/ancient-evil
   * Melee weapons
   * Distance weapons
   * Magic projectiles
+* Many diffrent enemies
+* Final boss fight
 * Inventory systems
   * Stats of main hero depends on his inventory
 * Dialogue systems
