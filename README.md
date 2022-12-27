@@ -1,5 +1,5 @@
 # Ancient Evil
-**Ancient Evil** is a isometric role-playing game made with **Unity engine**. I wanted to combine Gothic atmosphere with Diablo gameplay. It was inspired by course https://www.udemy.com/course/unityrpg/. 
+**Ancient Evil** is an isometric role-playing game made with **Unity engine**. I wanted to combine Gothic atmosphere with Diablo gameplay. It was inspired by course https://www.udemy.com/course/unityrpg/. 
 
 You can watch the final result here https://youtu.be/PKLASVg9z1Y
 
